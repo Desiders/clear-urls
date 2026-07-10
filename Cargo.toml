@@ -1,0 +1,41 @@
+[package]
+name = "clear-urls"
+version = "0.1.0"
+edition = "2024"
+description = "Remove tracking parameters from URLs"
+license = "LGPL-3.0-or-later"
+repository = "https://github.com/Desiders/clear-urls"
+keywords = ["url", "privacy", "tracking", "clearurls", "no-std"]
+categories = ["web-programming", "no-std"]
+
+[features]
+default = ["std", "embedded-rules"]
+std = ["miniserde/std", "regex-automata/std"]
+# Bundle a snapshot of the official ClearURLs rules (data.min.json)
+embedded-rules = []
+# Enable `fetch_rules()` for downloading the latest rules with SHA-256.
+# Requires a TLS backend: `rustls` or `native-tls`.
+fetch = ["std", "dep:ureq", "dep:sha2"]
+rustls = ["ureq/rustls"]
+native-tls = ["ureq/native-tls"]
+
+[dependencies]
+form_urlencoded = { version = "1", default-features = false, features = ["alloc"] }
+miniserde = { version = "0.1", default-features = false }
+percent-encoding = { version = "2", default-features = false, features = ["alloc"] }
+regex-automata = { version = "0.4", default-features = false, features = [
+    "alloc",
+    "meta",
+    "syntax",
+    "unicode",
+    "nfa",
+    "hybrid",
+    "dfa-onepass",
+    "perf",
+] }
+sha2 = { version = "0.10", optional = true }
+thiserror = { version = "2", default-features = false }
+ureq = { version = "3", optional = true, default-features = false }
+
+[dev-dependencies]
+serde_json = { version = "1", features = ["preserve_order"] }
