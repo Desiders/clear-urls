@@ -1,5 +1,3 @@
-//! Integration tests against the real embedded ClearURLs rules.
-
 #![cfg(feature = "embedded-rules")]
 
 use clear_urls::UrlCleaner;

@@ -2,8 +2,6 @@
 
 use clear_urls::UrlCleaner;
 
-/// Network test; run explicitly with `cargo test --features rustls -- --ignored`
-/// (or `--features native-tls`).
 #[test]
 #[ignore = "requires network access"]
 fn fetch_verify_and_compile_official_rules() {

@@ -1,5 +1,3 @@
-//! End-to-end tests with hand-written rules; runs with --no-default-features.
-
 use clear_urls::{Error, Settings, UrlCleaner};
 use serde_json::json;
 

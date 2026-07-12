@@ -14,10 +14,10 @@ std = ["miniserde/std", "regex-automata/std"]
 # Bundle a snapshot of the official ClearURLs rules (data.min.json)
 embedded-rules = []
 # Enable `fetch_rules()` for downloading the latest rules with SHA-256.
-# Requires a TLS backend: `rustls` or `native-tls`.
-fetch = ["std", "dep:ureq", "dep:sha2"]
-rustls = ["ureq/rustls"]
-native-tls = ["ureq/native-tls"]
+# Requires a TLS backend (`rustls` or `native-tls`).
+fetch = ["dep:ureq", "dep:sha2"]
+rustls = ["ureq?/rustls"]
+native-tls = ["ureq?/native-tls"]
 
 [dependencies]
 form_urlencoded = { version = "1", default-features = false, features = ["alloc"] }

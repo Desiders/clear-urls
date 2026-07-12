@@ -46,7 +46,8 @@ let cleaner = UrlCleaner::from_embedded_rules()?
 Without the default `std` feature the crate is `no_std` (it still requires
 `alloc`): regex matching runs on `regex-automata`'s meta engine — the same
 engine inside the `regex` crate, so match behavior is identical. The `std`
-feature pulls no extra dependencies and is required by `fetch`.
+feature pulls no extra dependencies, and `fetch` works independently of it —
+it only needs a platform with std for the HTTP client.
 
 ```toml
 [dependencies]
@@ -62,7 +63,7 @@ clear-urls = { version = "0.1", default-features = false, features = ["embedded-
 - **Fresh from upstream** (feature `fetch`): `fetch_rules()` downloads
   `https://rules2.clearurls.xyz/data.minify.json` and verifies it against the
   published SHA-256 hash, like the addon does. Pick the TLS backend with the
-  `rustls` or `native-tls` feature (each implies `fetch`):
+  `rustls` or `native-tls` feature:
 
 ```toml
 [dependencies]

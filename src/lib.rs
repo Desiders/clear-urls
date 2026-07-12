@@ -22,11 +22,9 @@
 //! regexes eagerly (tens of milliseconds), cleaning takes `&self`, and the
 //! cleaner is `Send + Sync`. Custom rules can be loaded with
 //! [`UrlCleaner::from_rules_json`]; the `fetch` feature adds [`fetch_rules`]
-//! for downloading the latest official rules (select its TLS backend with
-//! the `rustls` or `native-tls` feature; each implies `fetch`).
+//! for downloading the latest official rules (select its TLS backend with the `rustls` or `native-tls` feature).
 //!
-//! Without the default `std` feature the crate is `no_std` (it still needs
-//! `alloc`); `std` is required by `fetch`.
+//! Without the default `std` feature the crate is `no_std` (it still needs `alloc`)
 
 #![no_std]
 
