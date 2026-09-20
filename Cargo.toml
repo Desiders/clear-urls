@@ -33,7 +33,7 @@ regex-automata = { version = "0.4", default-features = false, features = [
     "dfa-onepass",
     "perf",
 ] }
-sha2 = { version = "0.10", optional = true }
+sha2 = { version = "0.11", optional = true }
 thiserror = { version = "2", default-features = false }
 ureq = { version = "3", optional = true, default-features = false }
 
