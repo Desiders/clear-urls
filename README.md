@@ -51,7 +51,7 @@ it only needs a platform with std for the HTTP client.
 
 ```toml
 [dependencies]
-clear-urls = { version = "0.1", default-features = false, features = ["embedded-rules"] }
+clear-urls = { version = "1.0.1", default-features = false, features = ["embedded-rules"] }
 ```
 
 ## Rules
@@ -68,18 +68,44 @@ clear-urls = { version = "0.1", default-features = false, features = ["embedded-
 
 ```toml
 [dependencies]
-clear-urls = { version = "0.1", features = ["fetch", "rustls"] }
+clear-urls = { version = "1.0.1", features = ["fetch", "rustls"] }
 # or: features = ["fetch", "native-tls"]
 ```
 
 Fetching upstream rules returns the upstream ruleset, independently of this
 project's maintained embedded rules.
 
-## Compatibility
+Providers can also set `preserveParams` to a list of exact parameter names to
+keep when applying their `rules` and `referralMarketing` patterns. Names are
+compared case-insensitively, after decoding query parameter names. This applies
+to query and fragment parameters within that provider; other providers,
+`rawRules`, and redirections still apply normally.
 
-The cleaning engine follows the ClearURLs rules schema, with adjustments for
-Rust and this library's API. The engine and embedded rules are maintained by
-this project, so cleaning results may differ from the browser addon.
+## Fidelity
+
+The algorithm is ported faithfully from the addon source (provider order,
+unanchored case-insensitive matching, exceptions, redirections with
+capture-group extraction and repeated percent-decoding, raw rules, anchored
+parameter-name rules, referral-marketing rules, `URLSearchParams`-style query
+handling vs. the addon's own fragment handling, local-host skipping, and
+cleaning to a fixpoint). Intentional divergences, all safe:
+
+- The scheme/host/path part of a URL is kept textually; the addon passes it
+  through the browser's URL parser, which normalizes it (lowercases the
+  host, adds a trailing `/` to an empty path, …). Hosts are compared
+  un-normalized too, so exotic IPv4 spellings like `http://2130706433/`
+  don't count as local for the local-host skip.
+- A redirection rule whose capture group does not participate in the match,
+  or captures an empty string, is skipped (the addon redirects to
+  `http://undefined` and `http://` respectively).
+- Strings the browser's URL parser rejects make the addon throw; here they
+  come back unchanged (`clean` is infallible).
+- Percent-decoding of redirect targets stops at the last well-formed value
+  where JavaScript's `decodeURIComponent` would throw.
+- The fixpoint loop is capped at 10 iterations to guard against pathological
+  custom rules.
+- On a rules-download hash mismatch the addon falls back to its previously
+  stored rules; `fetch_rules()` has no stored fallback and returns an error.
 
 ## License
 

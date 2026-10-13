@@ -16,6 +16,7 @@ struct ProviderData {
     url_pattern: String,
     complete_provider: bool,
     rules: Vec<String>,
+    preserve_params: Vec<String>,
     raw_rules: Vec<String>,
     referral_marketing: Vec<String>,
     exceptions: Vec<String>,
@@ -38,6 +39,7 @@ impl Visitor for Place<ProviderData> {
             url_pattern: None,
             complete_provider: None,
             rules: None,
+            preserve_params: None,
             raw_rules: None,
             referral_marketing: None,
             exceptions: None,
@@ -51,6 +53,7 @@ struct ProviderDataBuilder<'a> {
     url_pattern: Option<String>,
     complete_provider: Option<bool>,
     rules: Option<Vec<String>>,
+    preserve_params: Option<Vec<String>>,
     raw_rules: Option<Vec<String>>,
     referral_marketing: Option<Vec<String>>,
     exceptions: Option<Vec<String>>,
@@ -63,6 +66,7 @@ impl Map for ProviderDataBuilder<'_> {
             "urlPattern" => Deserialize::begin(&mut self.url_pattern),
             "completeProvider" => Deserialize::begin(&mut self.complete_provider),
             "rules" => Deserialize::begin(&mut self.rules),
+            "preserveParams" => Deserialize::begin(&mut self.preserve_params),
             "rawRules" => Deserialize::begin(&mut self.raw_rules),
             "referralMarketing" => Deserialize::begin(&mut self.referral_marketing),
             "exceptions" => Deserialize::begin(&mut self.exceptions),
@@ -76,6 +80,7 @@ impl Map for ProviderDataBuilder<'_> {
             url_pattern: self.url_pattern.take().unwrap_or_default(),
             complete_provider: self.complete_provider.take().unwrap_or_default(),
             rules: self.rules.take().unwrap_or_default(),
+            preserve_params: self.preserve_params.take().unwrap_or_default(),
             raw_rules: self.raw_rules.take().unwrap_or_default(),
             referral_marketing: self.referral_marketing.take().unwrap_or_default(),
             exceptions: self.exceptions.take().unwrap_or_default(),
@@ -183,6 +188,8 @@ pub(crate) struct Provider {
     pub(crate) url_pattern: Pattern,
     pub(crate) blocks_domain: bool,
     pub(crate) rules: Vec<Pattern>,
+    /// Exact parameter names to keep, compared case-insensitively.
+    pub(crate) preserve_params: Vec<String>,
     pub(crate) referral_marketing: Vec<Pattern>,
     pub(crate) raw_rules: Vec<Pattern>,
     pub(crate) exceptions: Vec<Pattern>,
@@ -224,6 +231,7 @@ fn compile_provider(name: &str, data: &ProviderData) -> Result<Provider, Error> 
         url_pattern: compile(&data.url_pattern)?,
         blocks_domain: data.complete_provider,
         rules,
+        preserve_params: data.preserve_params.clone(),
         referral_marketing: data
             .referral_marketing
             .iter()
@@ -252,6 +260,7 @@ mod tests {
         assert!(provider.url_pattern.is_match("https://example.com"));
         assert!(!provider.blocks_domain);
         assert!(provider.rules.is_empty());
+        assert!(provider.preserve_params.is_empty());
         assert!(provider.raw_rules.is_empty());
         assert!(provider.referral_marketing.is_empty());
         assert!(provider.exceptions.is_empty());

@@ -109,3 +109,57 @@ fn empty_rules_clean_nothing() {
     assert_eq!(result.url, url);
     assert!(!result.changed);
 }
+
+#[test]
+fn preserved_params_match_exact_names_case_insensitively() {
+    let cleaner = UrlCleaner::from_rules_json(
+        &json!({"providers": {"p": {
+            "rules": ["(?s:.*)"],
+            "preserveParams": ["id", "keep.*"]
+        }}})
+        .to_string(),
+    )
+    .unwrap();
+    let result = cleaner.clean(
+        "https://example.com/?id=1&ID=2&%69d=3&xid=4&id_extra=5&keep.*=6&keep_other=7#id=8&tracking=9",
+    );
+    assert_eq!(
+        result.url,
+        "https://example.com/?id=1&ID=2&id=3&keep.*=6#id=8"
+    );
+}
+
+#[test]
+fn preserved_params_take_priority_over_referral_marketing_rules() {
+    let cleaner = UrlCleaner::from_rules_json(
+        &json!({"providers": {"p": {
+            "rules": ["tracking"],
+            "preserveParams": ["tracking", "tag"],
+            "referralMarketing": ["tag", "affiliate"]
+        }}})
+        .to_string(),
+    )
+    .unwrap();
+    let url = "https://example.com/?tracking=1&tag=2&affiliate=3&id=4";
+    assert_eq!(cleaner.clean(url).url, url);
+    assert_eq!(
+        cleaner.with_strip_referral_marketing(true).clean(url).url,
+        "https://example.com/?tracking=1&tag=2&id=4"
+    );
+}
+
+#[test]
+fn preserved_params_do_not_override_other_providers() {
+    let cleaner = UrlCleaner::from_rules_json(
+        &json!({"providers": {
+            "p": {"rules": ["(?s:.*)"], "preserveParams": ["id"]},
+            "global": {"rules": ["id"]}
+        }})
+        .to_string(),
+    )
+    .unwrap();
+    assert_eq!(
+        cleaner.clean("https://example.com/?id=1&tracking=2").url,
+        "https://example.com/"
+    );
+}

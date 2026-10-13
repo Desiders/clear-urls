@@ -205,10 +205,42 @@ fn instagram_encoded_and_unicode_param_names_removed() {
 }
 
 #[test]
-fn instagram_functional_params_also_removed() {
+fn instagram_carousel_slide_preserved() {
+    check_instagram_url(
+        "https://instagram.com/p/ABC/?img_index=3&igsh=123&new_tracker=456",
+        "https://instagram.com/p/ABC/?img_index=3",
+        false,
+    );
     check_instagram_url(
         "https://instagram.com/p/ABC/?img_index=3",
-        "https://instagram.com/p/ABC/",
+        "https://instagram.com/p/ABC/?img_index=3",
+        false,
+    );
+}
+
+#[test]
+fn instagram_highlight_item_preserved() {
+    check_instagram_url(
+        "https://www.instagram.com/s/ABC/?story_media_id=1234567890&igsh=123&new_tracker=456",
+        "https://www.instagram.com/s/ABC/?story_media_id=1234567890",
+        false,
+    );
+}
+
+#[test]
+fn instagram_preserved_params_match_exact_names() {
+    check_instagram_url(
+        "https://instagram.com/p/ABC/?img_index=3&%73tory_media_id=42&img_index_extra=4&xstory_media_id=5&img_index%0A=6",
+        "https://instagram.com/p/ABC/?img_index=3&story_media_id=42",
+        false,
+    );
+}
+
+#[test]
+fn instagram_preserved_param_order_and_duplicates_retained() {
+    check_instagram_url(
+        "https://instagram.com/p/ABC/?img_index=3&new_tracker=1&story_media_id=42&img_index=4",
+        "https://instagram.com/p/ABC/?img_index=3&story_media_id=42&img_index=4",
         false,
     );
 }
@@ -234,8 +266,8 @@ fn instagram_redirect_unwrapped_before_param_removal() {
 #[test]
 fn instagram_redirect_target_on_instagram_cleaned() {
     check_instagram_url(
-        "https://l.instagram.com/?u=https%3A%2F%2Fwww.instagram.com%2Fp%2FABC%2F%3Funknown%3D1",
-        "https://www.instagram.com/p/ABC/",
+        "https://l.instagram.com/?u=https%3A%2F%2Fwww.instagram.com%2Fp%2FABC%2F%3Fimg_index%3D3%26unknown%3D1",
+        "https://www.instagram.com/p/ABC/?img_index=3",
         true,
     );
 }
