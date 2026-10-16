@@ -51,7 +51,7 @@ it only needs a platform with std for the HTTP client.
 
 ```toml
 [dependencies]
-clear-urls = { version = "1.0.1", default-features = false, features = ["embedded-rules"] }
+clear-urls = { version = "1", default-features = false, features = ["embedded-rules"] }
 ```
 
 ## Rules
@@ -68,7 +68,7 @@ clear-urls = { version = "1.0.1", default-features = false, features = ["embedde
 
 ```toml
 [dependencies]
-clear-urls = { version = "1.0.1", features = ["fetch", "rustls"] }
+clear-urls = { version = "1", features = ["fetch", "rustls"] }
 # or: features = ["fetch", "native-tls"]
 ```
 
