@@ -49,7 +49,8 @@ pub use error::Error;
 #[cfg(feature = "fetch")]
 pub use fetch::{DEFAULT_HASH_URL, DEFAULT_RULES_URL, FetchError, fetch_rules, fetch_rules_from};
 
-/// `data.min.json` snapshot from <https://gitlab.com/ClearURLs/rules>.
+/// This project's stable, supported ruleset, derived from
+/// <https://gitlab.com/ClearURLs/rules> and maintained with project-specific changes.
 #[cfg(feature = "embedded-rules")]
 pub const EMBEDDED_RULES_JSON: &str = include_str!("../data/data.min.json");
 

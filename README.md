@@ -2,8 +2,8 @@
 
 Remove tracking parameters from URLs. A Rust library port of the
 [ClearURLs](https://github.com/ClearURLs/Addon) browser addon's cleaning
-algorithm, using the official [ClearURLs rules](https://gitlab.com/ClearURLs/rules)
-(206 providers).
+algorithm, with a maintained ruleset derived from
+[ClearURLs rules](https://gitlab.com/ClearURLs/rules) (206 providers).
 
 ```rust
 use clear_urls::UrlCleaner;
@@ -51,13 +51,14 @@ it only needs a platform with std for the HTTP client.
 
 ```toml
 [dependencies]
-clear-urls = { version = "0.1", default-features = false, features = ["embedded-rules"] }
+clear-urls = { version = "1.0.1", default-features = false, features = ["embedded-rules"] }
 ```
 
 ## Rules
 
-- **Embedded** (default feature `embedded-rules`): a vendored snapshot of the
-  official `data.min.json`, see `data/README.md` for provenance.
+- **Embedded** (default feature `embedded-rules`): the stable, supported ruleset
+  maintained by this project. It is based on upstream ClearURLs rules and
+  includes project-specific changes; see `data/README.md` for provenance.
 - **Your own**: `UrlCleaner::from_rules_json(&str)` accepts any document in
   the ClearURLs rules schema.
 - **Fresh from upstream** (feature `fetch`): `fetch_rules()` downloads
@@ -67,9 +68,12 @@ clear-urls = { version = "0.1", default-features = false, features = ["embedded-
 
 ```toml
 [dependencies]
-clear-urls = { version = "0.1", features = ["fetch", "rustls"] }
+clear-urls = { version = "1.0.1", features = ["fetch", "rustls"] }
 # or: features = ["fetch", "native-tls"]
 ```
+
+Fetching upstream rules returns the upstream ruleset, independently of this
+project's maintained embedded rules.
 
 ## Fidelity
 

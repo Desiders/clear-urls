@@ -148,6 +148,182 @@ fn github_urls_excepted_from_global_rules() {
     assert_eq!(result.url, "https://github.com/notifications?query=repo");
 }
 
+fn check_instagram_url(input: &str, expected: &str, redirected: bool) {
+    let cleaner = cleaner();
+    let result = cleaner.clean(input);
+    assert_eq!(result.url, expected, "input: {input}");
+    assert!(!result.blocked);
+    assert_eq!(result.redirected, redirected);
+    assert_eq!(result.changed, input != expected);
+    assert_eq!(cleaner.clean(&result.url).url, expected);
+}
+
+#[test]
+fn instagram_four_character_and_legacy_tracking_params_removed() {
+    check_instagram_url(
+        "https://www.instagram.com/p/ABC/?igsh=1&igshid=2&igsi=3&stkn=4&abcd=5",
+        "https://www.instagram.com/p/ABC/",
+        false,
+    );
+}
+
+#[test]
+fn instagram_root_domain_and_subdomains_match() {
+    for base in [
+        "https://instagram.com",
+        "https://www.instagram.com",
+        "https://m.instagram.com",
+        "http://instagram.com",
+        "https://INSTAGRAM.COM",
+        "https://instagram.com:8443",
+    ] {
+        check_instagram_url(
+            &format!("{base}/reel/ABC/?abcd=1"),
+            &format!("{base}/reel/ABC/"),
+            false,
+        );
+    }
+    check_instagram_url(
+        "https://instagram.com?abcd=1",
+        "https://instagram.com",
+        false,
+    );
+}
+
+#[test]
+fn instagram_duplicate_and_bare_four_character_params_removed() {
+    check_instagram_url(
+        "https://instagram.com/p/ABC/?abcd=1&abcd=2&wxyz",
+        "https://instagram.com/p/ABC/",
+        false,
+    );
+}
+
+#[test]
+fn instagram_encoded_and_unicode_four_character_names_removed() {
+    check_instagram_url(
+        "https://instagram.com/p/ABC/?%61bcd=1&%E2%98%83abc=2",
+        "https://instagram.com/p/ABC/",
+        false,
+    );
+}
+
+#[test]
+fn instagram_carousel_slide_preserved() {
+    check_instagram_url(
+        "https://instagram.com/p/ABC/?img_index=3&igsh=123&abcd=456",
+        "https://instagram.com/p/ABC/?img_index=3",
+        false,
+    );
+    check_instagram_url(
+        "https://instagram.com/p/ABC/?img_index=3",
+        "https://instagram.com/p/ABC/?img_index=3",
+        false,
+    );
+}
+
+#[test]
+fn instagram_highlight_item_preserved() {
+    check_instagram_url(
+        "https://www.instagram.com/s/ABC/?story_media_id=1234567890&igsh=123&abcd=456",
+        "https://www.instagram.com/s/ABC/?story_media_id=1234567890",
+        false,
+    );
+}
+
+#[test]
+fn instagram_other_name_lengths_preserved() {
+    check_instagram_url(
+        "https://instagram.com/p/ABC/?abc=1&abcd=2&abcde=3&img_index_extra=4&long_bare&=value",
+        "https://instagram.com/p/ABC/?abc=1&abcde=3&img_index_extra=4&long_bare&=value",
+        false,
+    );
+}
+
+#[test]
+fn instagram_fragment_selectors_preserved_without_decoding_names() {
+    check_instagram_url(
+        "https://instagram.com/p/ABC/#IMG_INDEX=3&story_media_id=42&%61bcd=4&abcd=5",
+        "https://instagram.com/p/ABC/#IMG_INDEX=3&story_media_id=42&%61bcd=4",
+        false,
+    );
+}
+
+#[test]
+fn instagram_preserved_param_order_and_duplicates_retained() {
+    check_instagram_url(
+        "https://instagram.com/p/ABC/?img_index=3&abcd=1&story_media_id=42&img_index=4",
+        "https://instagram.com/p/ABC/?img_index=3&story_media_id=42&img_index=4",
+        false,
+    );
+}
+
+#[test]
+fn instagram_four_character_fragment_fields_and_plain_anchor_removed() {
+    check_instagram_url(
+        "https://instagram.com/p/ABC/?abcd=1#abcd=2&wxyz",
+        "https://instagram.com/p/ABC/",
+        false,
+    );
+}
+
+#[test]
+fn instagram_redirect_unwrapped_before_param_removal() {
+    check_instagram_url(
+        "https://l.instagram.com/?u=https%3A%2F%2Fexample.com%2Fpage%3Fid%3D7%26utm_source%3Dinstagram&new_tracker=1",
+        "https://example.com/page?id=7",
+        true,
+    );
+}
+
+#[test]
+fn instagram_redirect_target_on_instagram_cleaned() {
+    check_instagram_url(
+        "https://l.instagram.com/?u=https%3A%2F%2Fwww.instagram.com%2Fp%2FABC%2F%3Fimg_index%3D3%26abcd%3D1",
+        "https://www.instagram.com/p/ABC/?img_index=3",
+        true,
+    );
+}
+
+#[test]
+fn instagram_clean_url_unchanged() {
+    check_instagram_url(
+        "https://instagram.com/p/ABC/",
+        "https://instagram.com/p/ABC/",
+        false,
+    );
+}
+
+#[test]
+fn instagram_rule_preserves_unrelated_domain_params() {
+    let url = "https://example.com/p/ABC/?abcd=1&img_index=3";
+    check_instagram_url(url, url, false);
+}
+
+#[test]
+fn instagram_rule_rejects_similar_hostnames() {
+    for host in [
+        "instagram.com.example.org",
+        "www.instagram.com.example.org",
+        "instagram.community",
+        "notinstagram.com",
+        "instagram.com@examplesecrets.org",
+        "instagram.com:8443@examplesecrets.org",
+    ] {
+        let url = format!("https://{host}/p/ABC/?abcd=1");
+        check_instagram_url(&url, &url, false);
+    }
+}
+
+#[test]
+fn instagram_four_character_names_including_newlines_removed() {
+    check_instagram_url(
+        "https://instagram.com/p/ABC/?ab%0Ac=1&ab%0Dc=2",
+        "https://instagram.com/p/ABC/",
+        false,
+    );
+}
+
 #[test]
 fn complete_provider_domain_blocked() {
     let url = "https://kevinroebert.gitlab.io/ClearUrls/void/block.svg?type=test";
