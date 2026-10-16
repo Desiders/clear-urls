@@ -121,15 +121,8 @@ fn remove_fields(provider: &Provider, settings: &Settings, url: &str) -> Outcome
         .iter()
         .chain(referral_marketing.into_iter().flatten())
     {
-        let should_remove = |key: &str| {
-            rule.is_match(key)
-                && !provider
-                    .preserve_params
-                    .iter()
-                    .any(|name| name.eq_ignore_ascii_case(key))
-        };
-        query.remove_matching(should_remove);
-        fragments.remove_matching(should_remove);
+        query.remove_matching(|key| rule.is_match(key));
+        fragments.remove_matching(|key| rule.is_match(key));
     }
 
     let mut rebuilt = base.to_owned();

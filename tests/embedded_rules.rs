@@ -159,9 +159,9 @@ fn check_instagram_url(input: &str, expected: &str, redirected: bool) {
 }
 
 #[test]
-fn instagram_current_and_unknown_tracking_params_removed() {
+fn instagram_four_character_and_legacy_tracking_params_removed() {
     check_instagram_url(
-        "https://www.instagram.com/p/ABC/?igsh=123&brand_new_tracker=456",
+        "https://www.instagram.com/p/ABC/?igsh=1&igshid=2&igsi=3&stkn=4&abcd=5",
         "https://www.instagram.com/p/ABC/",
         false,
     );
@@ -178,27 +178,31 @@ fn instagram_root_domain_and_subdomains_match() {
         "https://instagram.com:8443",
     ] {
         check_instagram_url(
-            &format!("{base}/reel/ABC/?new_tracker=1"),
+            &format!("{base}/reel/ABC/?abcd=1"),
             &format!("{base}/reel/ABC/"),
             false,
         );
     }
-    check_instagram_url("https://instagram.com?new=1", "https://instagram.com", false);
+    check_instagram_url(
+        "https://instagram.com?abcd=1",
+        "https://instagram.com",
+        false,
+    );
 }
 
 #[test]
-fn instagram_duplicates_bare_keys_and_empty_names_removed() {
+fn instagram_duplicate_and_bare_four_character_params_removed() {
     check_instagram_url(
-        "https://instagram.com/p/ABC/?tracker=1&tracker=2&bare&=value",
+        "https://instagram.com/p/ABC/?abcd=1&abcd=2&wxyz",
         "https://instagram.com/p/ABC/",
         false,
     );
 }
 
 #[test]
-fn instagram_encoded_and_unicode_param_names_removed() {
+fn instagram_encoded_and_unicode_four_character_names_removed() {
     check_instagram_url(
-        "https://instagram.com/p/ABC/?%74racker=1&%E2%98%83=2",
+        "https://instagram.com/p/ABC/?%61bcd=1&%E2%98%83abc=2",
         "https://instagram.com/p/ABC/",
         false,
     );
@@ -207,7 +211,7 @@ fn instagram_encoded_and_unicode_param_names_removed() {
 #[test]
 fn instagram_carousel_slide_preserved() {
     check_instagram_url(
-        "https://instagram.com/p/ABC/?img_index=3&igsh=123&new_tracker=456",
+        "https://instagram.com/p/ABC/?img_index=3&igsh=123&abcd=456",
         "https://instagram.com/p/ABC/?img_index=3",
         false,
     );
@@ -221,17 +225,26 @@ fn instagram_carousel_slide_preserved() {
 #[test]
 fn instagram_highlight_item_preserved() {
     check_instagram_url(
-        "https://www.instagram.com/s/ABC/?story_media_id=1234567890&igsh=123&new_tracker=456",
+        "https://www.instagram.com/s/ABC/?story_media_id=1234567890&igsh=123&abcd=456",
         "https://www.instagram.com/s/ABC/?story_media_id=1234567890",
         false,
     );
 }
 
 #[test]
-fn instagram_preserved_params_match_exact_names() {
+fn instagram_other_name_lengths_preserved() {
     check_instagram_url(
-        "https://instagram.com/p/ABC/?img_index=3&%73tory_media_id=42&img_index_extra=4&xstory_media_id=5&img_index%0A=6",
-        "https://instagram.com/p/ABC/?img_index=3&story_media_id=42",
+        "https://instagram.com/p/ABC/?abc=1&abcd=2&abcde=3&img_index_extra=4&long_bare&=value",
+        "https://instagram.com/p/ABC/?abc=1&abcde=3&img_index_extra=4&long_bare&=value",
+        false,
+    );
+}
+
+#[test]
+fn instagram_fragment_selectors_preserved_without_decoding_names() {
+    check_instagram_url(
+        "https://instagram.com/p/ABC/#IMG_INDEX=3&story_media_id=42&%61bcd=4&abcd=5",
+        "https://instagram.com/p/ABC/#IMG_INDEX=3&story_media_id=42&%61bcd=4",
         false,
     );
 }
@@ -239,16 +252,16 @@ fn instagram_preserved_params_match_exact_names() {
 #[test]
 fn instagram_preserved_param_order_and_duplicates_retained() {
     check_instagram_url(
-        "https://instagram.com/p/ABC/?img_index=3&new_tracker=1&story_media_id=42&img_index=4",
+        "https://instagram.com/p/ABC/?img_index=3&abcd=1&story_media_id=42&img_index=4",
         "https://instagram.com/p/ABC/?img_index=3&story_media_id=42&img_index=4",
         false,
     );
 }
 
 #[test]
-fn instagram_fragment_fields_and_plain_anchor_removed() {
+fn instagram_four_character_fragment_fields_and_plain_anchor_removed() {
     check_instagram_url(
-        "https://instagram.com/p/ABC/?new=1#tracker=2&section",
+        "https://instagram.com/p/ABC/?abcd=1#abcd=2&wxyz",
         "https://instagram.com/p/ABC/",
         false,
     );
@@ -266,7 +279,7 @@ fn instagram_redirect_unwrapped_before_param_removal() {
 #[test]
 fn instagram_redirect_target_on_instagram_cleaned() {
     check_instagram_url(
-        "https://l.instagram.com/?u=https%3A%2F%2Fwww.instagram.com%2Fp%2FABC%2F%3Fimg_index%3D3%26unknown%3D1",
+        "https://l.instagram.com/?u=https%3A%2F%2Fwww.instagram.com%2Fp%2FABC%2F%3Fimg_index%3D3%26abcd%3D1",
         "https://www.instagram.com/p/ABC/?img_index=3",
         true,
     );
@@ -283,7 +296,7 @@ fn instagram_clean_url_unchanged() {
 
 #[test]
 fn instagram_rule_preserves_unrelated_domain_params() {
-    let url = "https://example.com/p/ABC/?new_tracker=1&img_index=3";
+    let url = "https://example.com/p/ABC/?abcd=1&img_index=3";
     check_instagram_url(url, url, false);
 }
 
@@ -297,15 +310,15 @@ fn instagram_rule_rejects_similar_hostnames() {
         "instagram.com@examplesecrets.org",
         "instagram.com:8443@examplesecrets.org",
     ] {
-        let url = format!("https://{host}/p/ABC/?new_tracker=1");
+        let url = format!("https://{host}/p/ABC/?abcd=1");
         check_instagram_url(&url, &url, false);
     }
 }
 
 #[test]
-fn instagram_newlines_in_param_names_removed() {
+fn instagram_four_character_names_including_newlines_removed() {
     check_instagram_url(
-        "https://instagram.com/p/ABC/?new%0Atracker=1&new%0Dtracker=2",
+        "https://instagram.com/p/ABC/?ab%0Ac=1&ab%0Dc=2",
         "https://instagram.com/p/ABC/",
         false,
     );

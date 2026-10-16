@@ -75,12 +75,6 @@ clear-urls = { version = "1.0.1", features = ["fetch", "rustls"] }
 Fetching upstream rules returns the upstream ruleset, independently of this
 project's maintained embedded rules.
 
-Providers can also set `preserveParams` to a list of exact parameter names to
-keep when applying their `rules` and `referralMarketing` patterns. Names are
-compared case-insensitively, after decoding query parameter names. This applies
-to query and fragment parameters within that provider; other providers,
-`rawRules`, and redirections still apply normally.
-
 ## Fidelity
 
 The algorithm is ported faithfully from the addon source (provider order,
